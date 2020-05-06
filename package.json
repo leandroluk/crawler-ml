@@ -1,0 +1,45 @@
+{
+  "name": "crawler-ml",
+  "version": "1.0.0",
+  "description": "Crawler para busca de produtos no Mercado Livre",
+  "main": "src/index.js",
+  "dependencies": {
+    "@koa/cors": "^3.0.0",
+    "address": "^1.1.2",
+    "axios": "^0.19.2",
+    "koa": "^2.11.0",
+    "koa-body": "^4.1.1",
+    "koa-compress": "^4.0.1",
+    "koa-morgan": "^1.0.1",
+    "koa-router": "^8.0.8",
+    "node-disk-info": "^1.0.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.9.6",
+    "@babel/node": "^7.8.7",
+    "@babel/preset-env": "^7.9.6",
+    "eslint": "^6.8.0",
+    "eslint-config-google": "^0.14.0",
+    "nodemon": "^2.0.3"
+  },
+  "scripts": {
+    "start": "nodemon --exec babel-node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leandroluk/crawler-ml.git"
+  },
+  "keywords": [
+    "crawler",
+    "mercado",
+    "livre",
+    "mundiale"
+  ],
+  "author": "Leandro Santiago Gomes <leandroluk@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/leandroluk/crawler-ml/issues"
+  },
+  "homepage": "https://github.com/leandroluk/crawler-ml#readme"
+}
