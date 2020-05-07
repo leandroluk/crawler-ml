@@ -1,14 +1,12 @@
-'strict';
-
-import address from 'address';
-import axios from 'axios';
-import os from 'os';
+const address = require('address');
+const axios = require('axios');
+const os = require('os');
 const nodeDiskInfo = require('node-disk-info');
 
 /**
  * cpu info
  */
-export class CpuInfo {
+class CpuInfo {
   /**
    * @return {Promise<CpuInfo>}
    */
@@ -48,7 +46,7 @@ export class CpuInfo {
 /**
  * memory info
  */
-export class MemoryInfo {
+class MemoryInfo {
   /** @return {Promise<MemoryInfo>} */
   static async new() {
     return new Promise((resolve) => {
@@ -81,7 +79,7 @@ export class MemoryInfo {
 /**
  * disk info
  */
-export class DiskInfo {
+class DiskInfo {
   /** @return {Promise<DiskInfo>} */
   static async new() {
     return new Promise((resolve) => {
@@ -119,7 +117,7 @@ export class DiskInfo {
 /**
  * network info
  */
-export class NetworkInfo {
+class NetworkInfo {
   /** @return {Promise<String>} */
   static privateIp() {
     return new Promise((resolve) => {
@@ -176,7 +174,7 @@ export class NetworkInfo {
 /**
  * system info
  */
-export class SystemInfo {
+class SystemInfo {
   /** @return {String} */
   static uptime() {
     const tick = parseInt(process.uptime(), 10);
@@ -258,3 +256,10 @@ export class SystemInfo {
   }
 }
 
+module.exports = {
+  CpuInfo,
+  MemoryInfo,
+  DiskInfo,
+  NetworkInfo,
+  SystemInfo,
+};

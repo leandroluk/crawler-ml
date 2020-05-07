@@ -1,4 +1,3 @@
-'strict';
-
-export * from './router';
-
+module.exports = {
+  ...require('./router'),
+};

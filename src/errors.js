@@ -1,9 +1,7 @@
-'strict';
-
 /**
  * general app error
  */
-export class AppError extends Error {
+class AppError extends Error {
   /**
    * @param {{
    *  name: String,
@@ -26,7 +24,6 @@ export class AppError extends Error {
   }
 }
 
-
-export const commonErrors = {
-
+module.exports = {
+  AppError,
 };

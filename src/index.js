@@ -1,6 +1,4 @@
-'strict';
-
-import { App } from './app';
+const { App } = require('./app');
 
 const port = process.env.PORT;
 

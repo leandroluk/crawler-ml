@@ -1,15 +1,13 @@
-'strict';
-
-import Koa from 'koa';
-import Router from 'koa-router';
-import { SystemInfo } from './info';
+const Koa = require('koa');
+const Router = require('koa-router');
+const { SystemInfo } = require('./info');
 
 /**
  * @param {Koa} app
  * @param {String} prefix
  * @return {Koa}
  */
-export const systemRouter = (app, prefix = '/@') => {
+const systemRouter = (app, prefix = '/@') => {
   const router = new Router({ prefix });
 
   router.get('/health', async (ctx) => {
@@ -21,4 +19,8 @@ export const systemRouter = (app, prefix = '/@') => {
     .use(router.allowedMethods());
 
   return app;
+};
+
+module.exports = {
+  systemRouter,
 };

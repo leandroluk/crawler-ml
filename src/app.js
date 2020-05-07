@@ -1,17 +1,15 @@
-'strict';
-
-import cors from '@koa/cors';
-import Koa from 'koa';
-import koaBody from 'koa-body';
-import compress from 'koa-compress';
-import morgan from 'koa-morgan';
-import { crawlerRouter } from './crawler';
-import { systemRouter } from './system';
+const Koa = require('koa');
+const cors = require('@koa/cors');
+const koaBody = require('koa-body');
+const compress = require('koa-compress');
+const morgan = require('koa-morgan');
+const { crawlerRouter } = require('./crawler');
+const { systemRouter } = require('./system');
 
 /**
  * Application class for serve routes
  */
-export class App {
+class App {
   /**
    * async new app for use when need add some async method
    * @param {{
@@ -89,7 +87,7 @@ export class App {
   }
 
   /**
-   * start application listen on port
+   * start application listening on port
    */
   listen() {
     this.app.listen(this.port, () => {
@@ -98,4 +96,6 @@ export class App {
   }
 }
 
-// add routes
+module.exports = {
+  App,
+};
