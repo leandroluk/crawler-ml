@@ -1,4 +1,5 @@
 const axios = require('axios');
+const cheerio = require('cheerio');
 
 const { AppError } = require('../errors');
 const errors = require('./errors');
@@ -80,13 +81,14 @@ class Crawler {
    * @return {Promise<Product[]>}
    */
   async getProducts(offset = 0) {
-    const query = [this.slugSearch(), `Desde_${offset}`].join('_');
+    const query = [this.slugSearch(), 'Desde', offset].join('_');
     const url = `${this.BASE_URL}/${query}`;
 
     // retry 3 times with scale sleep in each try
     for (let i = 0; i < 3; i++) {
       try {
         const response = await axios.get(url);
+        const $ = cheerio.load(response.data);
       } catch (_) { }
       setTimeout(() => null, 2 ** i * 1000);
     }
@@ -117,10 +119,20 @@ class Product {
    * }} props
    */
   constructor(props = {}) {
-
+    /** @type {String} */
+    this.name = props.name;
+    /** @type {String} */
+    this.link = props.link;
+    /** @type {Number} */
+    this.price = props.price;
+    /** @type {String} */
+    this.store = props.store;
+    /** @type {String} */
+    this.state = props.state;
   }
 }
 
 module.exports = {
   Crawler,
+  Product,
 };
