@@ -40,6 +40,7 @@ Foi criado um Dockerfile para a solução que expõe por padrão a porta 3000. C
 - adicionar o argumento de build do container do docker `--build-arg PORT`;
 - alterar a variável de execução do container `-e PORT`;
 
-## Teste online
+## Testes online
 
-O projeto foi hospedado no heroku para ser testado sem a necessidade de instalação no link https://safe-garden-25994.herokuapp.com/swagger
+- O projeto foi hospedado no heroku para ser testado sem a necessidade de instalação no link https://safe-garden-25994.herokuapp.com/swagger
+- O mesmo também foi anexado como uma API publica no RapidAPI no link https://rapidapi.com/leandroluk/api/mercadolivresearchapi
