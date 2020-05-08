@@ -13,23 +13,59 @@ const errors = require('./errors');
  */
 class Crawler {
   /**
-   * @param {{
-   *  query: { search: String, limit: Number },
-   *  proxy: String
-   * }} props
+   * @param {Object} props
    */
   constructor(props = {}) {
     // is necessary for the node to allow access to HTTPS pages
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
     this.BASE_URL = 'https://lista.mercadolivre.com.br';
+    this.pagination = Crawler.LIMIT;
+    this.logger = createLogger(this);
+
+    Object.defineProperties(this, {
+      _query: { enumerable: false, writable: true, value: {} },
+      query: {
+        enumerable: true,
+        get: () => this._query,
+        set: (value) => {
+          if (
+            // value is required and must be a object
+            !(value instanceof Object) ||
+            // value must have the search property
+            typeof value.search !== 'string' ||
+            // if value has the limit property, it must be a positive integer
+            (value.limit && (typeof value.limit !== 'number' || value.limit < 1 || value.limit % 1))
+          ) {
+            throw new AppError(errors.validation('query'));
+          }
+          this._query = value;
+        },
+      },
+      _proxy: { enumerable: false, writable: true },
+      proxy: {
+        get: () => this._proxy,
+        set: (value) => {
+          if (
+            // if has proxy
+            value && (
+              // proxy must be a string
+              !(value instanceof String) ||
+              // proxy must be a valid proxy url
+              !/^(https?:\/\/)(?:[\w-_\.]+)(?:(\:\d{1,5})|)$/i.test(value)
+            )
+          ) {
+            throw new AppError(errors.validation('proxy'));
+          }
+          this._proxy = value;
+        },
+      },
+    });
+
     /** @type {{limit: number, search:String}} */
-    this.query = { limit: 50, ...props.query };
+    this.query = { limit: Crawler.LIMIT, ...props.query };
     /** @type {String} */
     this.proxy = props.proxy;
-
-    this.pagination = 50;
-    this.logger = createLogger(this);
   }
 
   /**
@@ -84,7 +120,7 @@ class Crawler {
         .replace(/\s+/g, '-')
         // colapse dashes
         .replace(/-+/g, '-');
-    } catch (error) {
+    } catch (e) {
       throw new AppError(error.slugSearch(this.query.search));
     }
   }
@@ -211,25 +247,28 @@ class Crawler {
         ];
 
         const products = items.map((item) => {
-          const p = new Product({
+          return new Product({
             link: item.querySelector('.item__info-title').href,
             name: item.querySelector('.item__info-title').text.trim(),
             price: this.parsePrice(item.querySelector('.item__price')),
             state: this.parseState(item.querySelector('.item__condition')),
             store: this.parseStore(item.querySelector('.item__brand [data-item-jsurl]')),
           });
-          return p;
         });
 
         return products;
-      } catch (error) {
-        console.log(error);
+      } catch (e) {
+        // if throw error, ignore
       }
       setTimeout(() => null, 2 ** i * 1000);
     }
     throw new AppError(errors.fetchPage('list of products'));
   }
 }
+
+// static props
+Crawler.LIMIT = 50;
+
 
 /**
  * the result of each item of list

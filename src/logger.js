@@ -9,7 +9,7 @@ const logger = Logger.createLogger({
     {
       type: 'rotating-file',
       path: process.env.LOG_FILE || `${packageJson.name}.log`,
-      period: '1h',
+      period: '1d',
       count: 1000,
       level: 'debug',
     },

@@ -1,3 +1,5 @@
+jest.mock('request-promise-native');
+
 const {
   CpuInfo, MemoryInfo, DiskInfo, NetworkInfo, SystemInfo,
 } = require('../src/system');
@@ -5,7 +7,7 @@ const {
 describe('system module', () => {
   describe('info', () => {
     test(
-      'When I create an instance that contains the system information, it is ' +
+      'when I create an instance that contains the system information, it is ' +
       'expected to contain the CPU, Memory, Disk and Network properties in ' +
       'addition to the operating system information',
       (done) => {

@@ -18,6 +18,7 @@ module.exports = {
   'rules': {
     'object-curly-spacing': 'off',
     'indent': 'off',
-    'no-unused-vars': 'off'
+    'no-unused-vars': 'off',
+    'max-len': ['error', { 'code': 200, 'comments': 200 }]
   },
 };

@@ -10,7 +10,7 @@ module.exports = {
     description: `Cannot slugify search "${search}"`,
   }),
   validation: (property) => ({
-    name: validation,
+    name: 'validation',
     httpCode: 400,
     description: `Invalid property "${property}"`,
   }),

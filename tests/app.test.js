@@ -6,7 +6,7 @@ const { App } = require('../src/app');
 
 describe('app.js', () => {
   test(
-    'When I create the application, it should have no errors and must be ' +
+    'when I create the application, it should have no errors and must be ' +
     'accessible on the defined port',
     (done) => {
       const args = {
