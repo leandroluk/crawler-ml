@@ -36,7 +36,7 @@ Para rodar os testes, utilize o comando `npm test`
 
 ## Rodando em um container
 
-Foi criado um Dockerfile que cria um container da solução e tem como porta expoxta (por padrão a porta 3000). Caso queira alterar a porta de execução você pode:
+Foi criado um Dockerfile para a solução que expõe por padrão a porta 3000. Caso queira alterar a porta de execução você pode:
 - adicionar o argumento de build do container do docker `--build-arg PORT`;
 - alterar a variável de execução do container `-e PORT`;
 
