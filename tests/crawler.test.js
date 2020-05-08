@@ -1,4 +1,5 @@
 jest.mock('request-promise-native');
+jest.setTimeout(1000 * 30);
 
 const { Crawler, Product, validators } = require('../src/crawler');
 

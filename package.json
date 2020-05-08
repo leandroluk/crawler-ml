@@ -24,12 +24,11 @@
     "eslint": "^6.8.0",
     "eslint-config-google": "^0.14.0",
     "jest": "^26.0.1",
-    "nodemon": "^2.0.3",
     "request-promise-native": "^1.0.8",
     "supertest": "^4.0.2"
   },
   "scripts": {
-    "start": "nodemon src/index.js",
+    "start": "node src/index.js",
     "test": "jest"
   },
   "repository": {
@@ -47,5 +46,8 @@
   "bugs": {
     "url": "https://github.com/leandroluk/crawler-ml/issues"
   },
-  "homepage": "https://github.com/leandroluk/crawler-ml#readme"
+  "homepage": "https://github.com/leandroluk/crawler-ml#readme",
+  "engines": {
+    "node": "10.x"
+  }
 }

@@ -4,16 +4,16 @@ FROM mhart/alpine-node:latest
 # labels
 LABEL maintainer "Leandro Santiago Gomes <leandroluk@gmail.com>" 
 
-ARG LOG_FILE
 ARG PROXY
+ARG LOG_FILE
 
 # env variables
-ENV TZ      = America/Sao_Paulo \
-    NODE_ENV= prod              \
-    PORT    = 3000              \
-    PROXY   = ${PROXY}          \
-    LOG_FILE =${LOG_FILE}}      \
-    WORKDIR = /opt/crawler-ml
+ENV TZ       = America/Sao_Paulo \
+    NODE_ENV = prod              \
+    PORT     = 3000              \
+    PROXY    = ${PROXY}          \
+    LOG_FILE = ${LOG_FILE}       \
+    WORKDIR  = /opt/crawler-ml
 
 # set root path
 WORKDIR ${WORKDIR}
