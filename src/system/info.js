@@ -1,5 +1,5 @@
 const address = require('address');
-const axios = require('axios');
+const request = require('request-promise');
 const os = require('os');
 const nodeDiskInfo = require('node-disk-info');
 
@@ -132,7 +132,7 @@ class NetworkInfo {
     return new Promise(async (resolve) => {
       let publicIp = 'unknown';
       try {
-        const response = await axios.get('https://api.ipify.org/?format=text');
+        const response = await request.get('https://api.ipify.org/?format=text');
 
         publicIp = response.data;
       } catch (e) {

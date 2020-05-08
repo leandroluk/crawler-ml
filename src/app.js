@@ -1,10 +1,14 @@
 const Koa = require('koa');
+const { Server } = require('http');
 const cors = require('@koa/cors');
 const koaBody = require('koa-body');
 const compress = require('koa-compress');
-const morgan = require('koa-morgan');
+
+const { createLogger } = require('./logger');
+
 const { crawlerRouter } = require('./crawler');
 const { systemRouter } = require('./system');
+const { swaggerRouter } = require('./swagger');
 
 /**
  * Application class for serve routes
@@ -14,19 +18,19 @@ class App {
    * async new app for use when need add some async method
    * @param {{
    *  port: String,
+   *  proxy: String
    * }} props
    * @return {Promise<App>}
    */
   static async new(props = {}) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       try {
         const app = new App(props);
 
-        app
-          .addMiddlewares()
-          .addErrorHandling()
-          .addRoutes()
-          .listen();
+        app.addMiddlewares();
+        app.addErrorHandling();
+        app.addRoutes();
+        await app.listen();
 
         resolve(app);
       } catch (error) {
@@ -37,14 +41,20 @@ class App {
 
   /**
    * @param {{
-   *  port: String
+   *  port: String,
+   *  proxy: String
    * }} props
    */
   constructor(props = {}) {
     /** @type {String} */
     this.port = props.port || 3000;
-    /** @type {Koa} */
-    this.app = new Koa();
+    /** @type {String} */
+    this.proxy = props.proxy;
+
+    this.koa = new Koa();
+    this.logger = createLogger(this);
+    /** @type {Server} */
+    this.server;
   }
 
   /**
@@ -52,10 +62,9 @@ class App {
    * @return {App}
    */
   addMiddlewares() {
-    this.app
+    this.koa
       .use(compress())
       .use(cors())
-      .use(morgan('short'))
       .use(koaBody());
     return this;
   }
@@ -65,7 +74,7 @@ class App {
    * @return {App}
    */
   addErrorHandling() {
-    this.app.use(async (ctx, next) => {
+    this.koa.use(async (ctx, next) => {
       try {
         await next();
       } catch (error) {
@@ -81,17 +90,26 @@ class App {
    * @return {App}
    */
   addRoutes() {
-    systemRouter(this.app);
-    crawlerRouter(this.app);
+    systemRouter(this);
+    crawlerRouter(this);
+    swaggerRouter(this);
     return this;
   }
 
   /**
    * start application listening on port
+   * @return {Promise<App>}
    */
-  listen() {
-    this.app.listen(this.port, () => {
-      console.log(`running on port ${this.port}`);
+  async listen() {
+    return new Promise((resolve, reject) => {
+      try {
+        this.server = this.koa.listen(this.port, () => {
+          this.logger.info(`running on port ${this.port}`);
+          resolve(this);
+        });
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 }

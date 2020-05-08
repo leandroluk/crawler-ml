@@ -1,7 +1,11 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
+const { performance } = require('perf_hooks');
+// currently the only functional library that allows the use of a proxy
+const request = require('request-promise');
+const { JSDOM } = require('jsdom');
 
 const { AppError } = require('../errors');
+const { createLogger } = require('../logger');
+
 const errors = require('./errors');
 
 /**
@@ -10,20 +14,55 @@ const errors = require('./errors');
 class Crawler {
   /**
    * @param {{
-   *  query: { search: String, limit: Number }
+   *  query: { search: String, limit: Number },
+   *  proxy: String
    * }} props
    */
   constructor(props = {}) {
-    this.BASE_URL = 'https://lista.mercadolivre.com.br';
+    // is necessary for the node to allow access to HTTPS pages
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-    /** @type {Object} */
-    this.query = props.query || {};
+    this.BASE_URL = 'https://lista.mercadolivre.com.br';
+    /** @type {{limit: number, search:String}} */
+    this.query = { limit: 50, ...props.query };
+    /** @type {String} */
+    this.proxy = props.proxy;
+
+    this.pagination = 50;
+    this.logger = createLogger(this);
+  }
+
+  /**
+   * jsonified log for persist with kibana
+   * @param {String} type
+   * @param {*} body
+   */
+  log(type, body) {
+    this.logger.info({ type: `${this.constructor.name}.${type}`, body });
+  }
+
+  /**
+   * warpper for http get method
+   * @param {String} url
+   * @return {Promise<String>}
+   */
+  async getPage(url) {
+    this.log('getPage', url);
+    return await request.get(url, {
+      // in some cases of constant mass queries it is necessary to use some
+      // proxy to not ban the IP
+      proxy: this.proxy,
+      // used to force the server to send the page as gzip (so we have less
+      // content to download)
+      gzip: true,
+    });
   }
 
   /**
    * @return {String}
    */
   slugSearch() {
+    this.log('slugSearch', this.query.search);
     try {
       const from = 'àáäâèéëêìíïîòóöôùúüûñç·/_,:;';
       const to = 'aaaaeeeeiiiioooouuuunc------';
@@ -37,6 +76,8 @@ class Crawler {
         .split('')
         // remove acentuation and swap non valid chars to valid
         .map((c, i) => c.replace(new RegExp(from.charAt(i), 'g'), to.charAt(i)))
+        // build a new string
+        .join('')
         // remove invalid chars
         .replace(/[^a-z0-9 -]/g, '')
         // replace whitespace with '-'
@@ -44,35 +85,110 @@ class Crawler {
         // colapse dashes
         .replace(/-+/g, '-');
     } catch (error) {
-      throw new AppError(error.normalizeSearch(this.query.search));
+      throw new AppError(error.slugSearch(this.query.search));
     }
   }
 
   /**
-   * @return {Promise<Product[]>}
+   * parse value of .price-tag into
+   * @param {HTMLSpanElement} priceTag
+   * @return {Number}
    */
-  async run() {
-    const chunkSize = parseInt(this.query.limit / 50) + 1;
+  parsePrice(priceTag) {
+    const tagFraction = priceTag.querySelector('.price__fraction');
+    const tagCents = priceTag.querySelector('.price__decimals');
 
-    const products = await Promise.all(
-      Array(chunkSize).fill(0).map((_, i) => {
-        const offset = 50 * i + 1;
-        return this.chunkProcess(offset);
-      }),
-    );
+    let price = tagFraction.innerHTML;
 
-    return products.reduce((arr, list) => [...arr, ...list], []);
+    if (tagCents) price += '.' + tagCents.innerHTML;
+
+    price = parseFloat(price);
+
+    return price;
   }
 
   /**
-   * @param {Number} offset
+   * @param {HTMLDivElement} tagCondition
+   * @return {String}
+   */
+  parseState(tagCondition) {
+    if (tagCondition) {
+      return tagCondition.innerHTML.split(' - ').slice(-1)[0].trim();
+    }
+  }
+
+  /**
+   * @param {HTMLSpanElement} tagBrand
+   * @return {String}
+   */
+  parseStore(tagBrand) {
+    if (tagBrand) {
+      return tagBrand.getAttribute('data-item-jsurl').split('/').slice(-1)[0];
+    }
+  }
+
+  /**
+   * @return {Number[]}
+   */
+  buildChunks() {
+    let { limit = 50 } = this.query;
+    const chunks = [];
+
+    while (limit > 0) {
+      chunks.push(limit > this.pagination ?
+        this.pagination :
+        this.pagination - (this.pagination - limit));
+      limit -= this.pagination;
+    }
+
+    return chunks;
+  }
+
+  /**
+   * @param {Number} startAt
+   * @return {Number}
+   */
+  perform(startAt) {
+    return (performance.now() - startAt) / 1000;
+  }
+
+  /**
+   * performs the search but breaks into multiple processes as each page has
+   * only {this.pagination} items
    * @return {Promise<Product[]>}
    */
-  async chunkProcess(offset = 0) {
-    const products = await this.getProducts(offset);
-    return await Promise.all(
-      products.map((product) => this.addStoreToProduct(product)),
-    );
+  async run() {
+    const startAt = performance.now();
+    const chunks = this.buildChunks();
+
+    let products = await Promise.all(chunks.map((max, i) => {
+      const offset = this.pagination * i + 1;
+      return this.chunkProcess(i, offset, max);
+    }));
+
+    products = products.reduce((arr, list) => [...arr, ...list], []);
+
+    this.log('run', { time: this.perform(startAt) });
+
+    return products;
+  }
+
+  /**
+   * execute the search in one page
+   * @param {Number} i
+   * @param {Number} offset
+   * @param {Number} limit
+   * @return {Promise<Product[]>}
+   */
+  async chunkProcess(i, offset = 0, limit = 50) {
+    let products = await this.getProducts(offset);
+
+    // remove limit of size
+    products = products.slice(0, limit);
+
+    this.log('chunkProcess', { chunkNumber: i, total: products.length });
+
+    return products;
   }
 
   /**
@@ -87,21 +203,31 @@ class Crawler {
     // retry 3 times with scale sleep in each try
     for (let i = 0; i < 3; i++) {
       try {
-        const response = await axios.get(url);
-        const $ = cheerio.load(response.data);
-      } catch (_) { }
+        const html = await this.getPage(url);
+        const { document } = new JSDOM(html).window;
+
+        const items = [
+          ...document.querySelectorAll('#searchResults .results-item'),
+        ];
+
+        const products = items.map((item) => {
+          const p = new Product({
+            link: item.querySelector('.item__info-title').href,
+            name: item.querySelector('.item__info-title').text.trim(),
+            price: this.parsePrice(item.querySelector('.item__price')),
+            state: this.parseState(item.querySelector('.item__condition')),
+            store: this.parseStore(item.querySelector('.item__brand [data-item-jsurl]')),
+          });
+          return p;
+        });
+
+        return products;
+      } catch (error) {
+        console.log(error);
+      }
       setTimeout(() => null, 2 ** i * 1000);
     }
     throw new AppError(errors.fetchPage('list of products'));
-  }
-
-  /**
-   * return a store name from product link
-   * @param {Product} product
-   * @return {Promise<Product>}
-   */
-  async addStoreToProduct(product) {
-
   }
 }
 

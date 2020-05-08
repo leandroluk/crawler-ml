@@ -1,0 +1,71 @@
+swagger: '2.0'
+info:
+  title: 'crawler-ml'
+  description: 'Crawler para busca de produtos no Mercado Livre'
+  version: '1.0.0'
+paths:
+  /:
+    post:
+      summary: Buscar produtos
+      operationId: post_search
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: body
+        description: Objeto contendo a configuração da busca
+        required: true
+        schema:
+          type: object
+          properties:
+            search:
+              type: string
+              description: Descrição da busca
+              example: 'bola'
+            limit:
+              type: number
+              description: Número de itens a serem retornados
+              example: 60
+              default: 50
+      responses:
+        200:
+          description: Busca com sucesso
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Product'
+        404:
+          description: Falha ao fazer a busca
+          schema:
+            $ref: '#/definitions/AppError'
+        400:
+          description: Erro de validação ou não foi possível parsear o conteúdo do campo "search"
+          schema:
+            $ref: '#/definitions/AppError'
+definitions:
+  AppError:
+    type: object
+    properties:
+      name:
+        type: string
+      httpCode:
+        type: number
+      description:
+        type: string
+      isOperational:
+        type: boolean
+  Product:
+    type: object
+    properties:
+      name:
+        type: string
+      link:
+        type: string
+      price:
+        type: number
+      store:
+        type: string
+      state:
+        type: string

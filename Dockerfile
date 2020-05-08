@@ -4,17 +4,22 @@ FROM mhart/alpine-node:latest
 # labels
 LABEL maintainer "Leandro Santiago Gomes <leandroluk@gmail.com>" 
 
+ARG LOG_FILE
+ARG PROXY
+
 # env variables
 ENV TZ      = America/Sao_Paulo \
-    NODE_ENV= prod\
-    PORT    = 3000 \
+    NODE_ENV= prod              \
+    PORT    = 3000              \
+    PROXY   = ${PROXY}          \
+    LOG_FILE =${LOG_FILE}}      \
     WORKDIR = /opt/crawler-ml
 
 # set root path
 WORKDIR ${WORKDIR}
 
 # copy container files
-COPY package.json package-lock.json /src  ${WORKDIR}
+COPY package.json package-lock.json /src ${WORKDIR}
 
 # install & tree-shacking deps
 RUN npm ci --prod
@@ -23,4 +28,4 @@ RUN npm ci --prod
 EXPOSE ${PORT}
 
 # run project
-CMD node ${WORKDIR}/src/index.js
+CMD node --no-warnings ${WORKDIR}/src/index.js

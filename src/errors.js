@@ -1,3 +1,5 @@
+const Koa = require('koa');
+
 /**
  * general app error
  */
@@ -22,7 +24,18 @@ class AppError extends Error {
 
     Error.captureStackTrace(this);
   }
-}
+
+  /**
+   * @param {Koa.Request} ctx
+   * @param {Error} error
+   */
+  static parse(ctx, error) {
+    if (error instanceof AppError) {
+      ctx.throw(error.httpCode, error);
+    };
+    ctx.throw(500, error.message);
+  }
+};
 
 module.exports = {
   AppError,
